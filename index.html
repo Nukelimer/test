@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Tags Quiz</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #quiz-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .options label {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .options input {
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        #submit-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #submit-btn:hover {
+            background: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .correct {
+            background: #dff0d8;
+            color: #3c763d;
+        }
+        .incorrect {
+            background: #f2dede;
+            color: #a94442;
+        }
+        #final-score {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        #restart-btn {
+            display: none;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #restart-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>HTML Tags Quiz</h1>
+    <div id="quiz-container">
+        <div id="question"></div>
+        <div id="options" class="options"></div>
+        <button id="submit-btn">Submit Answer</button>
+        <div id="result"></div>
+    </div>
+    <div id="final-score"></div>
+    <button id="restart-btn">Restart Quiz</button>
+
+    <audio id="clap-sound" src="clap.mp3"></audio>
+    <audio id="boo-sound" src="boo.mp3"></audio>
+
+    <script>
+const questions = [
+    {
+        tag: 'a',
+        question: 'What is the purpose of the {a} tag?',
+        example: 'In a fictional blog "TechBit", users click "Read More" to visit full articles.',
+        options: ['Creates a hyperlink', 'Defines an article', 'Embeds audio', 'Displays an image'],
+        correct: 'Creates a hyperlink',
+        explanation: 'The {a} tag creates a hyperlink, linking to another webpage or resource. In TechBit, {a href="article.html"}Read More{/a} would link to the full article.'
+    },
+    {
+        tag: 'article',
+        question: 'What does the {article} tag do?',
+        example: 'In "NewsNerd" news portal, each news story is displayed as a separate block.',
+        options: ['Defines a self-contained content block', 'Creates a navigation bar', 'Inserts an image caption', 'Embeds a video'],
+        correct: 'Defines a self-contained content block',
+        explanation: 'The {article} tag defines independent, self-contained content, like a news story in NewsNerd. Example: {article}{h2}Story Title{/h2}{p}...{/p}{/article}.'
+    },
+    {
+        tag: 'details',
+        question: 'What is the {details} tag used for?',
+        example: 'In "FAQZone", clicking "More Info" reveals additional information.',
+        options: ['Creates a collapsible section', 'Defines a footer', 'Inserts a button', 'Links to external stylesheets'],
+        correct: 'Creates a collapsible section',
+        explanation: 'The {details} tag creates a disclosure widget that can be toggled to show/hide content. In FAQZone, {details}{summary}More Info{/summary}{p}...{/p}{/details} hides/reveals info.'
+    },
+    {
+        tag: 'figcaption',
+        question: 'What is the {figcaption} tag\'s role?',
+        example: 'In "PhotoPals", a description appears below each gallery image.',
+        options: ['Provides a caption for a figure', 'Creates a form input', 'Defines a menu', 'Marks text as highlighted'],
+        correct: 'Provides a caption for a figure',
+        explanation: 'The {figcaption} tag provides a caption for a {figure} element. In PhotoPals, {figure}{img src="photo.jpg" alt="Description"}{figcaption}Image Caption{/figcaption}{/figure}.'
+    },
+    {
+        tag: 'form',
+        question: 'What does the {form} tag do?',
+        example: 'In "SignUpNow", users enter their details to register.',
+        options: ['Creates a user input form', 'Defines a header', 'Embeds an object', 'Marks emphasized text'],
+        correct: 'Creates a user input form',
+        explanation: 'The {form} tag creates a form for user input. In SignUpNow, {form action="/submit"}{input type="text" name="username"}{/form} collects user data.'
+    },
+    {
+        tag: 'header',
+        question: 'What is the {header} tag used for?',
+        example: 'In "TrendyShop", the top section contains the logo and navigation.',
+        options: ['Defines introductory content', 'Creates a hyperlink', 'Inserts a video', 'Defines a table'],
+        correct: 'Defines introductory content',
+        explanation: 'The {header} tag defines introductory content or navigation, typically at the top. In TrendyShop, {header}{img src="logo.png" alt="logo"}{nav}...{/nav}{/header} structures the top section.'
+    },
+    {
+        tag: 'input',
+        question: 'What does the {input} tag do?',
+        example: 'In "SearchEasy", users type queries in a search bar.',
+        options: ['Creates an input control field', 'Defines a caption', 'Embeds audio', 'Creates a menu'],
+        correct: 'Creates an input control field',
+        explanation: 'The {input} tag creates interactive input fields like text boxes or buttons. In SearchEasy, {input type="text" name="query" placeholder="Search"} creates a search bar.'
+    },
+    {
+        tag: 'label',
+        question: 'What is the {label} tag used for?',
+        example: 'In "Formify", text next to checkboxes explains their purpose.',
+        options: ['Associates text with a form control', 'Defines a footer', 'Inserts a link', 'Marks text as highlighted'],
+        correct: 'Associates text with a form control',
+        explanation: 'The {label} tag associates text with a form control, improving accessibility. In Formify, {label for="checkbox1"}Option 1{/label}{input type="checkbox" id="checkbox1"} links text to the input.'
+    },
+    {
+        tag: 'link',
+        question: 'What is the purpose of the {link} tag?',
+        example: 'In "StyleStar", the site uses an external CSS file.',
+        options: ['Links external resources like stylesheets', 'Creates a hyperlink', 'Embeds a video', 'Defines a form'],
+        correct: 'Links external resources like stylesheets',
+        explanation: 'The {link} tag links external resources, typically CSS, in the {head}. In StyleStar, {link rel="stylesheet" href="styles.css"} applies styles.'
+    },
+    {
+        tag: 'main',
+        question: 'What does the {main} tag represent?',
+        example: 'In "BlogBurst", the primary content area holds posts.',
+        options: ['Contains the primary document content', 'Defines a navigation bar', 'Inserts an image', 'Creates a button'],
+        correct: 'Contains the primary document content',
+        explanation: 'The {main} tag holds the primary content of the page, unique to the document. In BlogBurst, {main}{article}...{/article}{/main} contains blog posts.'
+    },
+    {
+        tag: 'mark',
+        question: 'What is the {mark} tag used for?',
+        example: 'In "StudyBuddy", key terms in notes are highlighted.',
+        options: ['Highlights text for emphasis', 'Creates a form input', 'Defines a menu', 'Embeds an object'],
+        correct: 'Highlights text for emphasis',
+        explanation: 'The {mark} tag highlights text for emphasis or reference. In StudyBuddy, {p}Learn {mark}HTML{/mark} today!{/p} highlights "HTML".'
+    },
+    {
+        tag: 'menu',
+        question: 'What does the {menu} tag do?',
+        example: 'In "Toolify", a context menu offers editing options.',
+        options: ['Defines a list of commands or options', 'Creates a header', 'Inserts a video', 'Defines a hyperlink'],
+        correct: 'Defines a list of commands or options',
+        explanation: 'The {menu} tag defines a list of menu items or commands. In Toolify, {menu}{li}{button}Edit{/button}{/li}{/menu} creates a context menu.'
+    },
+    {
+        tag: 'button',
+        question: 'What is the {button} tag used for?',
+        example: 'In "GameZone", users click "Start" to begin playing.',
+        options: ['Creates a clickable button', 'Links a stylesheet', 'Defines a table', 'Embeds audio'],
+        correct: 'Creates a clickable button',
+        explanation: 'The {button} tag creates a clickable element, often for actions. In GameZone, {button onclick="startGame()"}Start{/button} triggers the game.'
+    },
+    {
+        tag: 'object',
+        question: 'What does the {object} tag do?',
+        example: 'In "DocView", a PDF is embedded in the page.',
+        options: ['Embeds external content like PDFs', 'Creates a form input', 'Defines a navigation bar', 'Marks highlighted text'],
+        correct: 'Embeds external content like PDFs',
+        explanation: 'The {object} tag embeds external content, like PDFs or plugins. In DocView, {object data="doc.pdf" type="application/pdf"}{/object} displays a PDF.'
+    },
+    {
+        tag: 'video',
+        question: 'What is the {video} tag used for?',
+        example: 'In "StreamFun", users watch movie trailers.',
+        options: ['Embeds video content', 'Creates a hyperlink', 'Defines a menu', 'Inserts an image'],
+        correct: 'Embeds video content',
+        explanation: 'The {video} tag embeds video files. In StreamFun, {video src="trailer.mp4" controls}{/video} plays a trailer with controls.'
+    },
+    {
+        tag: 'optgroup',
+        question: 'What does the {optgroup} tag do?',
+        example: 'In "ShopEasy", a dropdown groups items by category.',
+        options: ['Groups related options in a dropdown', 'Defines a header', 'Embeds an object', 'Creates a button'],
+        correct: 'Groups related options in a dropdown',
+        explanation: 'The {optgroup} tag groups {option} elements in a {select} dropdown. In ShopEasy, {optgroup label="Electronics"}{option}Phone{/option}{/optgroup} organizes items.'
+    },
+    {
+        tag: 'p',
+        question: 'What is the {p} tag used for?',
+        example: 'In "StorySpace", each paragraph of text is separated.',
+        options: ['Defines a paragraph', 'Creates a form', 'Inserts a video', 'Links a stylesheet'],
+        correct: 'Defines a paragraph',
+        explanation: 'The {p} tag defines a paragraph of text. In StorySpace, {p}This is a story...{/p} separates text blocks.'
+    },
+    {
+        tag: 'q',
+        question: 'What does the {q} tag do?',
+        example: 'In "QuoteIt", short quotes are displayed inline.',
+        options: ['Denotes a short inline quotation', 'Creates a button', 'Defines a menu', 'Embeds a PDF'],
+        correct: 'Denotes a short inline quotation',
+        explanation: 'The {q} tag denotes a short inline quotation, typically with quotes. In QuoteIt, {p}He said {q}Live boldly{/q}.{/p} marks a quote.'
+    },
+    {
+        tag: 'section',
+        question: 'What is the {section} tag used for?',
+        example: 'In "LearnNow", content is divided into lessons.',
+        options: ['Defines a thematic content section', 'Embeds a video', 'Creates a hyperlink', 'Inserts an image'],
+        correct: 'Defines a thematic content section',
+        explanation: 'The {section} tag defines a thematic group of content. In LearnNow, {section}{h2}Lesson 1{/h2}{p}...{/p}{/section} groups lesson content.'
+    },
+    {
+        tag: 'nav',
+        question: 'What is the {nav} tag used for?',
+        example: 'In "WebEasy", links to pages are in a top bar.',
+        options: ['Defines navigation links', 'Creates a form input', 'Inserts a video', 'Marks highlighted text'],
+        correct: 'Defines navigation links',
+        explanation: 'The {nav} tag contains navigation links. In WebEasy, {nav}{a href="home.html"}Home{/a}{/nav} creates a navigation bar.'
+    },
+    {
+        tag: 'footer',
+        question: 'What does the {footer} tag do?',
+        example: 'In "SiteBase", the bottom has copyright info.',
+        options: ['Defines footer content', 'Creates a button', 'Embeds an object', 'Defines a form'],
+        correct: 'Defines footer content',
+        explanation: 'The {footer} tag contains footer content, like copyright. In SiteBase, {footer}{p}© 2023{/p}{/footer} adds a footer.'
+    },
+    {
+        tag: 'aside',
+        question: 'What is the {aside} tag used for?',
+        example: 'In "Blog", sidebar content offers extra tips.',
+        options: ['Defines peripheral content', 'Creates a hyperlink', 'Inserts a video', 'Creates a menu'],
+        correct: 'Defines peripheral content',
+        explanation: 'The {aside} tag represents content tangentially related to the main content, like sidebars. In Blog, {aside}{p}Tip:...{/p}{/aside} adds a sidebar.'
+    },
+    {
+        tag: 'div',
+        question: 'What is the {div} tag used for?',
+        example: 'In "LayoutPro", content blocks are styled uniquely.',
+        options: ['Creates a generic block container', 'Defines a form', 'Embeds audio', 'Links a stylesheet'],
+        correct: 'Creates a generic block container',
+        explanation: 'The {div} tag is a generic container for block-level content, often styled with CSS. In LayoutPro, {div class="box"}Content{/div} groups content.'
+    },
+    {
+        tag: 'span',
+        question: 'What does the {span} tag do?',
+        example: 'In "TextFun", specific words are colored differently.',
+        options: ['Styles inline content', 'Creates a button', 'Defines a table', 'Inserts an image'],
+        correct: 'Styles inline content',
+        explanation: 'The {span} tag is a generic inline container, often for styling. In TextFun, {p}Welcome to {span style="color: red;"}Fun{/span}!{/p} styles "Fun".'
+    },
+    {
+        tag: 'h1',
+        question: 'What is the {h1} tag used for?',
+        example: 'In "HeadSpace", the main title stands out.',
+        options: ['Defines the main heading', 'Creates a form input', 'Embeds a video', 'Marks highlighted text'],
+        correct: 'Defines the main heading',
+        explanation: 'The {h1} tag defines the top-level heading. In HeadSpace, {h1}Welcome{/h1} sets the main title.'
+    },
+    {
+        tag: 'ul',
+        question: 'What does the {ul} tag do?',
+        example: 'In "Listify", items are shown as bullets.',
+        options: ['Creates an unordered list', 'Defines a header', 'Inserts a video', 'Creates a button'],
+        correct: 'Creates an unordered list',
+        explanation: 'The {ul} tag creates an unordered (bulleted) list. In Listify, {ul}{li}Item 1{/li}{/ul} displays bulleted items.'
+    },
+    {
+        tag: 'li',
+        question: 'What is the {li} tag used for?',
+        example: 'In "TodoNow", each task is a list item.',
+        options: ['Defines a list item', 'Creates a hyperlink', 'Embeds an object', 'Defines a form'],
+        correct: 'Defines a list item',
+        explanation: 'The {li} tag defines an item in a list ({ul} or {ol}). In TodoNow, {ul}{li}Task 1{/li}{/ul} adds a task.'
+    },
+    {
+        tag: 'table',
+        question: 'What does the {table} tag do?',
+        example: 'In "StatsEasy", data is shown in rows and columns.',
+        options: ['Creates a table for data', 'Creates a menu', 'Inserts an image', 'Marks highlighted text'],
+        correct: 'Creates a table for data',
+        explanation: 'The {table} tag creates a table for tabular data. In StatsEasy, {table}{tr}{td}Data{/td}{/tr}{/table} organizes data.'
+    },
+    {
+        tag: 'td',
+        question: 'What is the {td} tag used for?',
+        example: 'In "GridPro", each cell holds a value.',
+        options: ['Defines a table cell', 'Creates a button', 'Defines a footer', 'Embeds a video'],
+        correct: 'Defines a table cell',
+        explanation: 'The {td} tag defines a cell in a table row. In GridPro, {tr}{td}Value{/td}{/tr} adds a cell.'
+    },
+    {
+        tag: 'select',
+        question: 'What does the {select} tag do?',
+        example: 'In "ChooseIt", users pick from a dropdown menu.',
+        options: ['Creates a dropdown menu', 'Links a stylesheet', 'Inserts a video', 'Marks highlighted text'],
+        correct: 'Creates a dropdown menu',
+        explanation: 'The {select} tag creates a dropdown menu for selecting options. In ChooseIt, {select}{option}Option 1{/option}{/select} offers choices.'
+    }
+];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        let currentQuestion = 0;
+        let score = 0;
+        const totalQuestions = questions.length;
+
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const submitButton = document.getElementById('submit-btn');
+        const resultElement = document.getElementById('result');
+        const finalScoreElement = document.getElementById('final-score');
+        const restartButton = document.getElementById('restart-btn');
+        const quizContainer = document.getElementById('quiz-container');
+        const clapSound = document.getElementById('clap-sound');
+        const booSound = document.getElementById('boo-sound');
+
+        // Load saved scores from localStorage
+        let highScores = JSON.parse(localStorage.getItem('htmlQuizScores')) || [];
+
+        // Function to shuffle array (Fisher-Yates)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            const shuffledOptions = shuffleArray([...q.options]);
+            questionElement.innerHTML = `
+                <div class="question">
+                    <h3>Question ${currentQuestion + 1} of ${totalQuestions}</h3>
+                    <p>${q.question}</p>
+                    <p><em>${q.example}</em></p>
+                </div>
+            `;
+            optionsElement.innerHTML = '';
+            shuffledOptions.forEach((option, index) => {
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = 'answer';
+                input.id = `option${index}`;
+                input.value = option;
+                const label = document.createElement('label');
+                label.setAttribute('for', `option${index}`);
+                label.innerHTML = option;
+                label.insertBefore(input, label.firstChild);
+                optionsElement.appendChild(label);
+            });
+            submitButton.disabled = true;
+            resultElement.innerHTML = '';
+            resultElement.className = '';
+        }
+
+        function checkAnswer() {
+            const selectedOption = document.querySelector('input[name="answer"]:checked');
+            if (!selectedOption) return;
+
+            const answer = selectedOption.value;
+            const correctAnswer = questions[currentQuestion].correct;
+            if (answer === correctAnswer) {
+                score++;
+                resultElement.className = 'correct';
+                resultElement.textContent = `Correct! ${questions[currentQuestion].explanation}`;
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                clapSound.play().catch(e => console.error('Clap sound failed:', e));
+            } else {
+                resultElement.className = 'incorrect';
+                resultElement.textContent = `Incorrect. The correct answer is "${correctAnswer}". ${questions[currentQuestion].explanation}`;
+                booSound.play().catch(e => console.error('Boo sound failed:', e));
+            }
+            submitButton.disabled = false;
+            optionsElement.querySelectorAll('input').forEach(input => input.disabled = true);
+            submitButton.textContent = currentQuestion < totalQuestions - 1 ? 'Next' : 'Finish';
+        }
+
+        function nextQuestion() {
+            // Pause and reset audio
+            clapSound.pause();
+            clapSound.currentTime = 0;
+            booSound.pause();
+            booSound.currentTime = 0;
+
+            currentQuestion++;
+            if (currentQuestion < totalQuestions) {
+                loadQuestion();
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submit Answer';
+            } else {
+                endQuiz();
+            }
+        }
+
+        function endQuiz() {
+            quizContainer.style.display = 'none';
+            finalScoreElement.style.display = 'block';
+            restartButton.style.display = 'block';
+            finalScoreElement.innerHTML = `Quiz Complete! Your Score: ${score} out of ${totalQuestions} (${Math.round((score / totalQuestions) * 100)}%)`;
+
+            // Save score
+            highScores.push({ score, date: new Date().toLocaleString() });
+            highScores.sort((a, b) => b.score - a.score);
+            highScores = highScores.slice(0, 5);
+            localStorage.setItem('htmlQuizScores', JSON.stringify(highScores));
+            finalScoreElement.innerHTML += '<h3>High Scores:</h3><ul>';
+            highScores.forEach(s => {
+                finalScoreElement.innerHTML += `<li>${s.score}/${totalQuestions} - ${s.date}</li>`;
+            });
+            finalScoreElement.innerHTML += '</ul>';
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            quizContainer.style.display = 'block';
+            finalScoreElement.style.display = 'none';
+            restartButton.style.display = 'none';
+            loadQuestion();
+        }
+
+        optionsElement.addEventListener('change', () => {
+            submitButton.disabled = !document.querySelector('input[name="answer"]:checked');
+        });
+
+        submitButton.addEventListener('click', () => {
+            if (submitButton.textContent === 'Submit Answer') {
+                checkAnswer();
+            } else if (submitButton.textContent === 'Next' || submitButton.textContent === 'Finish') {
+                nextQuestion();
+            }
+        });
+
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Initialize
+        loadQuestion();
+    </script>
+</body>
+</html>
